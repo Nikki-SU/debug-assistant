@@ -1,30 +1,55 @@
-"""POST /api/resolve —— 回传解决方案，状态置为 🟢 已解决。
-
-对应 SPEC：项目一 §五. 闭环机制
-"""
+"""POST /api/resolve —— 回传解决方案，闭环。"""
 from __future__ import annotations
-from fastapi import APIRouter, HTTPException
-from pydantic import BaseModel
+
+from datetime import datetime
+from pathlib import Path
+
+from fastapi import APIRouter, Depends, HTTPException
+
+from ..config import Settings, get_settings
+from ..models.error_report import ReportResolve, ResolveResult
+from ..storage import (
+    append_resolution,
+    load_index,
+    read_report,
+    update_index_row,
+    write_report,
+)
+
+router = APIRouter(tags=["resolve"])
 
 
-class ResolvePayload(BaseModel):
-    error_id: str
-    solution: str
-    related_changes: str | None = None
+def _locate_report(settings: Settings, error_id: str) -> Path:
+    """通过 index.csv 找到报告文件路径。"""
+    for r in load_index(settings.index_csv):
+        if r.error_id == error_id:
+            p = settings.data_root / r.relpath
+            if p.exists():
+                return p
+    raise HTTPException(status_code=404, detail=f"error_id 不存在或文件丢失: {error_id}")
 
 
-class ResolveResponse(BaseModel):
-    error_id: str
-    status: str  # "resolved"
+@router.post("/api/resolve", response_model=ResolveResult)
+def resolve_report(payload: ReportResolve, settings: Settings = Depends(get_settings)) -> ResolveResult:
+    if not payload.solution.strip():
+        raise HTTPException(status_code=400, detail="solution 不能为空")
 
+    path = _locate_report(settings, payload.error_id)
+    resolved_at = datetime.now()
+    ts = resolved_at.strftime("%Y-%m-%d %H:%M:%S")
 
-router = APIRouter()
+    md = read_report(path)
+    md = append_resolution(md, payload, resolved_at)
+    write_report(path, md)
 
+    updated = update_index_row(
+        settings.index_csv,
+        payload.error_id,
+        status="resolved",
+        resolved_at=ts,
+    )
+    if updated is None:
+        # 索引被外部删除，但报告仍写了；不抛 500，反映真实状态
+        raise HTTPException(status_code=500, detail="索引更新失败，但报告已追加解决方案")
 
-@router.post("/resolve", response_model=ResolveResponse)
-def resolve_report(payload: ResolvePayload) -> ResolveResponse:
-    """把解决方案追加到原报告 Markdown 的"八、解决方案"章节末尾，状态切到 🟢。"""
-    # TODO: 1) 通过 error_id 定位 Markdown 文件
-    # TODO: 2) 替换/追加"解决状态"与"解决方案"段
-    # TODO: 3) 更新 index.csv 中该行的 status 列
-    raise HTTPException(status_code=501, detail="Not implemented yet")
+    return ResolveResult(error_id=payload.error_id, status="resolved", resolved_at=ts)

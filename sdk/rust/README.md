@@ -1,13 +1,19 @@
 # debug-assistant Rust SDK
 
 ```rust
-use debug_assistant_sdk::Debugger;
+use debug_assistant_sdk::{Debugger, ReportPayload};
 
-let dbg = Debugger::new("PaperAssistant", "backend", "127.0.0.1", 8765);
+let dbg = Debugger::new("PaperAssistant", "backend");
 
-if let Err(e) = risky_op() {
-    dbg.report(&e, &context, &logs);
+if let Err(e) = mineru.convert(&path) {
+    let _ = dbg.report(&ReportPayload {
+        error_type: "TimeoutError",
+        error_message: &e.to_string(),
+        stage: Some("文献综述"),
+        context: vec![("file_name".into(), path.display().to_string())],
+        ..Default::default()
+    });
 }
 ```
 
-对应 SPEC：项目一 §六.3 Rust SDK
+依赖 `ureq`（同步 HTTP）。失败仅打印 stderr 警告，不向上传播。

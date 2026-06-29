@@ -1,10 +1,17 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
 [project]
 name = "debug-assistant-server"
 version = "0.1.0"
-description = "FastAPI server for debug-assistant: error report ingestion + closed-loop resolution"
+description = "Debug Assistant local server (FastAPI)"
 requires-python = ">=3.11"
-license = { text = "AGPL-3.0-only" }
+dependencies = [
+  "fastapi>=0.110,<1.0",
+  "uvicorn[standard]>=0.27,<1.0",
+  "pydantic>=2.5,<3.0",
+]
 
-[build-system]
-requires = ["setuptools>=68"]
-build-backend = "setuptools.build_meta"
+[tool.setuptools.packages.find]
+include = ["app*"]

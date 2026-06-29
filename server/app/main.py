@@ -1,48 +1,76 @@
-"""debug-assistant FastAPI 入口。
+"""FastAPI 入口：debug-assistant server。
 
-监听 localhost:8765，提供错误报告创建、解决方案回传、跨项目检索能力。
+启动：
+    cd server
+    pip install -r requirements.txt
+    python -m app.main          # 默认 127.0.0.1:8765
+    或
+    uvicorn app.main:app --host 127.0.0.1 --port 8765 --reload
 """
 from __future__ import annotations
+
+import logging
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from .config import SETTINGS
-from .api import report, resolve, search
+from .api import report_router, resolve_router, search_router
+from .config import get_settings
+
+settings = get_settings()
+
+logging.basicConfig(
+    level=getattr(logging, settings.log_level.upper(), logging.INFO),
+    format="[%(asctime)s] %(levelname)s [%(name)s] %(message)s",
+    datefmt="%H:%M:%S",
+)
+log = logging.getLogger("debug-assistant")
 
 app = FastAPI(
-    title="debug-assistant",
+    title="Debug Assistant",
     version="0.1.0",
-    description="Cross-project error logging and closed-loop resolution tool",
+    description="独立的错误记录 / 闭环解决工具",
 )
 
-# CORS：允许本地任意端口（GUI、其他项目）访问
+# 本地 GUI / sidecar 调用，CORS 全开（仅监听 127.0.0.1）
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-app.include_router(report.router, prefix="/api")
-app.include_router(resolve.router, prefix="/api")
-app.include_router(search.router, prefix="/api")
+app.include_router(report_router)
+app.include_router(resolve_router)
+app.include_router(search_router)
 
 
 @app.get("/api/health")
 def health() -> dict:
-    return {"status": "ok", "version": "0.1.0"}
+    return {
+        "ok": True,
+        "version": "0.1.0",
+        "data_root": str(settings.data_root),
+        "host": settings.host,
+        "port": settings.port,
+    }
 
 
-def run() -> None:
-    """CLI 入口，等同于 uvicorn 启动。"""
+def main() -> None:
+    """脚本入口：python -m app.main"""
     import uvicorn
+
+    log.info("data_root = %s", settings.data_root)
+    log.info("listen    = %s:%s", settings.host, settings.port)
     uvicorn.run(
         "app.main:app",
-        host=SETTINGS.host,
-        port=SETTINGS.port,
-        log_level=SETTINGS.log_level.lower(),
+        host=settings.host,
+        port=settings.port,
+        reload=False,
+        log_level=settings.log_level.lower(),
     )
 
 
 if __name__ == "__main__":
-    run()
+    main()

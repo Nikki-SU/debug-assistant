@@ -1,16 +1,21 @@
 {
   "name": "debug-assistant-sdk",
   "version": "0.1.0",
-  "description": "TypeScript SDK for debug-assistant (Tauri / Browser / Node)",
-  "license": "AGPL-3.0-only",
+  "description": "TypeScript SDK for Debug Assistant (Tauri / Node)",
   "type": "module",
   "main": "dist/index.js",
+  "module": "dist/index.js",
   "types": "dist/index.d.ts",
+  "files": [
+    "dist",
+    "src"
+  ],
   "scripts": {
     "build": "tsc",
-    "dev": "tsc --watch"
+    "clean": "rimraf dist"
   },
+  "license": "AGPL-3.0",
   "devDependencies": {
-    "typescript": "^5.6.0"
+    "typescript": "5.4"
   }
 }

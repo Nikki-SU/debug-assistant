@@ -1,2 +1,2 @@
-"""debug-assistant FastAPI server package."""
+"""debug-assistant server 包。"""
 __version__ = "0.1.0"

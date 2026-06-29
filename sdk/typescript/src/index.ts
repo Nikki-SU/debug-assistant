@@ -1,5 +1,7 @@
-/**
- * debug-assistant TypeScript SDK 入口。
- */
-export { Debugger } from "./client";
-export type { DebuggerOptions, ReportPayload, ResolvePayload } from "./client";
+export {
+  Debugger,
+  type DebuggerConfig,
+  type ReportPayload,
+  type ResolvePayload,
+  type ReportCreated,
+} from "./client";

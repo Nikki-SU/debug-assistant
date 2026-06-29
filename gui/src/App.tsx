@@ -1,27 +1,61 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { api } from "./api/client";
+import { ReportList } from "./components/ReportList";
+import { ReportDetail } from "./components/ReportDetail";
+import { NewReportDialog } from "./components/NewReportDialog";
 
-/**
- * Debug Assistant GUI 主界面骨架。
- * 对应 SPEC：项目一 §四.3 GUI 手动填写 / §五.1 回传对话框
- */
 export default function App() {
-  const [activeTab, setActiveTab] = useState<"reports" | "new" | "settings">("reports");
+  const [selected, setSelected] = useState<string | undefined>();
+  const [tick, setTick] = useState(0);
+  const [newOpen, setNewOpen] = useState(false);
+  const [health, setHealth] = useState<{ ok: boolean; data_root?: string } | null>(null);
+  const [healthErr, setHealthErr] = useState<string>("");
+
+  useEffect(() => {
+    void api
+      .health()
+      .then((h) => setHealth({ ok: h.ok, data_root: h.data_root }))
+      .catch((e) => setHealthErr(String(e.message ?? e)));
+  }, [tick]);
 
   return (
     <div className="app">
-      <aside className="sidebar">
-        <h1>🐛 Debug Assistant</h1>
-        <nav>
-          <button onClick={() => setActiveTab("reports")} className={activeTab === "reports" ? "active" : ""}>📋 报告列表</button>
-          <button onClick={() => setActiveTab("new")} className={activeTab === "new" ? "active" : ""}>➕ 新建报告</button>
-          <button onClick={() => setActiveTab("settings")} className={activeTab === "settings" ? "active" : ""}>⚙️ 设置</button>
-        </nav>
-      </aside>
-      <main className="main">
-        {activeTab === "reports" && <div>TODO: 报告列表（按项目 + 状态分组）</div>}
-        {activeTab === "new" && <div>TODO: 手动新建报告表单</div>}
-        {activeTab === "settings" && <div>TODO: 数据根目录、端口、API 配置</div>}
-      </main>
+      <header>
+        <div className="title">🔧 Debug Assistant</div>
+        <div className="health">
+          {health ? (
+            <span className="ok">● 已连接 · {health.data_root}</span>
+          ) : (
+            <span className="bad">○ 未连接 server: {healthErr || "(loading...)"}</span>
+          )}
+        </div>
+        <div className="spacer" />
+        <button className="primary" onClick={() => setNewOpen(true)}>＋ 新建报告</button>
+        <button onClick={() => setTick((t) => t + 1)}>🔄 刷新</button>
+      </header>
+
+      <div className="body">
+        <aside className="sidebar">
+          <ReportList selected={selected} onSelect={setSelected} refreshTick={tick} />
+        </aside>
+        <main className="main">
+          <ReportDetail
+            errorId={selected}
+            onResolved={() => setTick((t) => t + 1)}
+          />
+        </main>
+      </div>
+
+      {newOpen && (
+        <NewReportDialog
+          onClose={() => setNewOpen(false)}
+          onCreated={(eid) => {
+            setNewOpen(false);
+            setSelected(eid);
+            setTick((t) => t + 1);
+          }}
+        />
+      )}
     </div>
   );
 }

@@ -1,1 +1,2 @@
-"""debug-assistant CLI 入口。"""
+"""debug-assistant CLI 包。"""
+__version__ = "0.1.0"

@@ -2,21 +2,21 @@
   "$schema": "https://schema.tauri.app/config/2",
   "productName": "Debug Assistant",
   "version": "0.1.0",
-  "identifier": "com.nikki-su.debug-assistant",
+  "identifier": "site.debugassistant.app",
   "build": {
-    "frontendDist": "../dist",
-    "devUrl": "http://localhost:1420",
     "beforeDevCommand": "npm run dev",
-    "beforeBuildCommand": "npm run build"
+    "beforeBuildCommand": "npm run build",
+    "devUrl": "http://127.0.0.1:1420",
+    "frontendDist": "../dist"
   },
   "app": {
     "windows": [
       {
         "title": "Debug Assistant",
-        "width": 1100,
-        "height": 720,
-        "minWidth": 800,
-        "minHeight": 500
+        "width": 1200,
+        "height": 800,
+        "minWidth": 900,
+        "minHeight": 600
       }
     ],
     "security": {

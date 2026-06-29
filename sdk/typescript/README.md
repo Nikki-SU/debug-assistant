@@ -1,14 +1,26 @@
 # debug-assistant TypeScript SDK
 
-```typescript
-import { Debugger } from 'debug-assistant-sdk';
+用于 Tauri 前端或 Node.js 业务侧。失败静默降级，不抛错到业务。
 
-const dbg = new Debugger({ project: 'PaperAssistant', module: 'frontend', port: 8765 });
+```ts
+import { Debugger } from "debug-assistant-sdk";
 
-window.addEventListener('error', (e) => dbg.report({ error: e.error }));
+const dbg = new Debugger({ project: "PaperAssistant", module: "frontend" });
+dbg.installGlobalHandlers();           // 自动捕获 window.onerror / unhandledrejection
 
-try { await api.upload(file); }
-catch (error) { dbg.report({ error, context: { file_name: file.name } }); }
+try {
+  await api.uploadFile(file);
+} catch (e) {
+  const eid = await dbg.report({ error: e, context: { file_name: file.name } });
+}
+
+await dbg.resolve({ error_id: eid!, solution: "解决方式" });
 ```
 
-对应 SPEC：项目一 §六.2 TypeScript SDK
+构建：
+
+```bash
+cd sdk/typescript
+npm install
+npm run build
+```
