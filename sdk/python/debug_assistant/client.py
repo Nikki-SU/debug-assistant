@@ -50,10 +50,19 @@ class DebuggerConfig:
     ) -> "DebuggerConfig":
         p = project or _env("DEBUG_ASSISTANT_PROJECT")
         m = module or _env("DEBUG_ASSISTANT_MODULE")
-        if not p or not m:
+        # 兜底：project 从 cwd basename 推断；module 默认 "main"。
+        # —— 仅在仍为空时启用，保持显式传参的优先级。
+        if not p:
+            try:
+                p = os.path.basename(os.getcwd()) or None
+            except Exception:
+                p = None
+        if not m:
+            m = "main"
+        if not p:
             raise ValueError(
-                "Debugger 需要 project / module（构造参数或 DEBUG_ASSISTANT_PROJECT / "
-                "DEBUG_ASSISTANT_MODULE 环境变量）。"
+                "Debugger 需要 project（构造参数 / DEBUG_ASSISTANT_PROJECT 环境变量 / "
+                "可推断的 cwd basename 三者至少一个）。"
             )
         host = overrides.pop("host", None) or _env("DEBUG_ASSISTANT_HOST", "127.0.0.1")
         port = int(overrides.pop("port", None) or _env("DEBUG_ASSISTANT_PORT", "8765"))

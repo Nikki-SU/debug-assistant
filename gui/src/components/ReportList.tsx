@@ -5,9 +5,11 @@ interface Props {
   selected?: string;
   onSelect: (errorId: string) => void;
   refreshTick: number;
+  /** 来自 Sidebar 的 project 过滤，undefined = 全部 */
+  filterProject?: string;
 }
 
-export function ReportList({ selected, onSelect, refreshTick }: Props) {
+export function ReportList({ selected, onSelect, refreshTick, filterProject }: Props) {
   const [keyword, setKeyword] = useState("");
   const [status, setStatus] = useState<"" | "open" | "resolved">("");
   const [hits, setHits] = useState<ReportSummary[]>([]);
@@ -21,6 +23,7 @@ export function ReportList({ selected, onSelect, refreshTick }: Props) {
     try {
       const r = await api.search({
         keyword: keyword || undefined,
+        project: filterProject || undefined,
         status: status || undefined,
         limit: 100,
       });
@@ -36,7 +39,7 @@ export function ReportList({ selected, onSelect, refreshTick }: Props) {
   useEffect(() => {
     void load();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [refreshTick, status]);
+  }, [refreshTick, status, filterProject]);
 
   return (
     <div className="report-list">
@@ -61,7 +64,10 @@ export function ReportList({ selected, onSelect, refreshTick }: Props) {
 
       {error && <div className="error-banner">⚠️ {error}</div>}
 
-      <div className="list-stats">共 {total} 条</div>
+      <div className="list-stats">
+        {filterProject ? <>📁 <b>{filterProject}</b> · </> : null}
+        共 {total} 条
+      </div>
 
       <ul className="hit-list">
         {hits.map((h) => (

@@ -114,3 +114,43 @@ class SearchHit(BaseModel):
 class SearchResponse(BaseModel):
     total: int
     hits: list[SearchHit]
+
+# ---------- 项目注册表 ----------
+
+
+class ProjectRegistry(BaseModel):
+    """projects_registry.csv 一行。
+
+    与 ReportCreate.project 通过 name 字段关联。
+    open_with 取值：none / copy_path / explorer / vscode / custom；
+    空字符串 → GUI 端按全局默认（default_open_with）兜底。
+    """
+
+    name: str = Field(..., description="项目名（主键，大小写敏感）")
+    local_path: str = Field(default="", description="本地仓库根目录绝对路径")
+    open_with: str = Field(default="", description="打开方式（空则跟随全局默认）")
+    custom_cmd: str = Field(default="", description="open_with=custom 时的命令模板")
+    created_at: str = Field(default="", description="YYYY-MM-DD HH:MM:SS")
+
+
+class RegistryUpsert(BaseModel):
+    """POST /api/registry 请求体。"""
+
+    name: str
+    local_path: str = ""
+    open_with: str = ""
+    custom_cmd: str = ""
+
+
+class SettingsView(BaseModel):
+    """GET /api/settings 响应体（仅暴露用户可配的全局默认项）。"""
+
+    default_open_with: str = "copy_path"
+    default_custom_cmd: str = ""
+
+
+class SettingsPatch(BaseModel):
+    """PUT /api/settings 请求体（字段可选，仅更新提供的）。"""
+
+    default_open_with: Optional[str] = None
+    default_custom_cmd: Optional[str] = None

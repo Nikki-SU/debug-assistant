@@ -28,6 +28,27 @@ export interface ReportDetail {
   path: string;
 }
 
+/** /api/registry 单行（project_registry.csv 一行） */
+export interface RegistryItem {
+  name: string;
+  local_path: string;
+  open_with: string;       // "" / none / copy_path / explorer / vscode / custom
+  custom_cmd: string;
+  created_at: string;
+}
+
+export interface RegistryListResp {
+  total: number;
+  items: RegistryItem[];
+}
+
+export type OpenWith = "none" | "copy_path" | "explorer" | "vscode" | "custom";
+
+export interface SettingsView {
+  default_open_with: OpenWith;
+  default_custom_cmd: string;
+}
+
 async function jsonFetch<T>(url: string, init?: RequestInit): Promise<T> {
   const resp = await fetch(url, init);
   if (!resp.ok) {
@@ -72,5 +93,35 @@ export const api = {
       method: "POST",
       headers: { "Content-Type": "application/json; charset=utf-8" },
       body: JSON.stringify(body),
+    }),
+
+  // ----- 项目注册表 -----
+  registryList: () => jsonFetch<RegistryListResp>(`${BASE}/api/registry`),
+
+  registryUpsert: (item: {
+    name: string;
+    local_path?: string;
+    open_with?: string;
+    custom_cmd?: string;
+  }) =>
+    jsonFetch<RegistryItem>(`${BASE}/api/registry`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json; charset=utf-8" },
+      body: JSON.stringify(item),
+    }),
+
+  registryDelete: (name: string) =>
+    jsonFetch<{ ok: boolean; name: string }>(`${BASE}/api/registry/${encodeURIComponent(name)}`, {
+      method: "DELETE",
+    }),
+
+  // ----- 全局设置 -----
+  settingsGet: () => jsonFetch<SettingsView>(`${BASE}/api/settings`),
+
+  settingsPut: (patch: Partial<SettingsView>) =>
+    jsonFetch<SettingsView>(`${BASE}/api/settings`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json; charset=utf-8" },
+      body: JSON.stringify(patch),
     }),
 };

@@ -14,7 +14,7 @@ import logging
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from .api import report_router, resolve_router, search_router
+from .api import registry_router, report_router, resolve_router, search_router
 from .config import get_settings
 
 settings = get_settings()
@@ -44,6 +44,7 @@ app.add_middleware(
 app.include_router(report_router)
 app.include_router(resolve_router)
 app.include_router(search_router)
+app.include_router(registry_router)
 
 
 @app.get("/api/health")
