@@ -1,4 +1,4 @@
-# debug-assistant 一键启动（开发模式）
+﻿# debug-assistant 一键启动（开发模式）
 # 用法：在 PowerShell 中执行 .\dev.ps1
 #   首次：自动创建 venv、安装 server / SDK / CLI 依赖
 #   之后：直接启动 server (8765) 和 GUI 前端 (1420)
@@ -65,3 +65,4 @@ try {
     Stop-Job -Name da-server -ErrorAction SilentlyContinue
     Remove-Job -Name da-server -ErrorAction SilentlyContinue
 }
+
