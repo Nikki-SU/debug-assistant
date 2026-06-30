@@ -14,6 +14,10 @@
     debugger show ERR-20260629-143052-A3F9
     debugger projects
     debugger health
+
+    # 一键接入到目标项目（vendor SDK + 可选 patch 入口）
+    debugger install G:\\PaperAssistant
+    debugger install G:\\PaperAssistant --auto-patch
 """
 from __future__ import annotations
 
@@ -25,6 +29,8 @@ from typing import Optional
 import typer
 
 from debug_assistant import Debugger, DebuggerConfig
+
+from .install_cmd import install_command
 
 app = typer.Typer(
     name="debugger",
@@ -215,6 +221,10 @@ def health(
         typer.echo("❌ server 不可达", err=True)
         raise typer.Exit(code=2)
     typer.echo(json.dumps(h, ensure_ascii=False, indent=2))
+
+
+# 一键接入子命令：debugger install <项目路径>
+app.command("install", help="一键 vendor SDK 到目标项目（默认仅打印 patch，加 --auto-patch 才改入口文件）")(install_command)
 
 
 def main() -> None:
